@@ -34,6 +34,7 @@
             <span class="prompt">$</span> {{ trans.sudoStatus }}
           </div>
           <div class="header-actions">
+            <a href="/#/dashboard" class="btn">监控详情 ↗</a>
             <button @click="refreshServers" class="btn" :disabled="adminSiteLoading">↻ {{ trans.refresh }}</button>
             <select
               v-if="isMultipleMode"

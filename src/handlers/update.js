@@ -756,7 +756,7 @@ async function forwardWebSocketUpgrade(request, env, internalPath, logPrefix) {
 
 export async function handleWebSocketUpgrade(request, env) {
   const settings = await loadSiteSettings(env.DB, { forceRefresh: true });
-  if (settings?.is_public !== 'true' && !await checkWebSocketAuth(request, env, settings)) {
+  if (!await checkWebSocketAuth(request, env, settings)) {
     return new Response(JSON.stringify({ error: 'Unauthorized', code: 401 }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' }

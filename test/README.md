@@ -1,5 +1,36 @@
 # 本地测试工具
 
+## NORIN 公开状态与权限回归
+
+```bash
+npm run test:permissions
+npm run build:frontend
+npm run test:all
+```
+
+权限测试使用 Node.js 内置 SQLite（本地使用 Node 24），执行项目实际建表和查询 SQL；
+测试数据库只在内存中，所有凭据均为测试值，外部版本请求被本地替身替代，不访问 Cloudflare。
+它不替代 Miniflare/workerd 的完整运行时回归。
+
+完整回归已在隔离 Docker `node:22.20.0-bookworm-slim`（Debian 12、glibc 2.36）验证。
+宿主 Ubuntu 20.04 的 glibc 2.31 无法运行当前锁定的 workerd；无需升级宿主机。
+`npm run test:all` 包含主测试、Agent 配置、历史查询和 `test:runtime`。
+后者会构建前端、执行 **仅本地** Wrangler dry-run，并用 Miniflare 启动打包后的 Worker、
+临时 D1、SQLite DO、Assets 和真实 WebSocket；不部署、不使用线上数据库或凭据。
+运行时测试依赖 devDependencies 中 Wrangler 提供的 Miniflare。
+
+前端 WebSocket 单元测试以 `https: false` 和 middleware 模式启动 Vite：测试目标是模拟连接的
+生命周期，不需要 mkcert，也不会安装系统信任证书。真实连接由运行时回归另行覆盖。
+
+- `/`：NORIN 公开状态页，每 60 秒读取 `/api/status`，仅返回未隐藏节点的 `name`、`region`、`online` 和汇总数量。
+- `/admin#/admin`：原管理后台；登录后“监控详情”进入 `/#/dashboard`，保留原仪表盘及详情页。
+- `/api/servers`、`/api/server`、`/api/history/all` 和浏览器 `/api/ws`：始终要求管理员 JWT/Cookie，不受旧 `is_public` 开关影响。
+- 匿名 `/api/config` 仅返回启动/登录验证所需字段；公开状态页不请求私有配置，也不建立指标 WebSocket。
+- Agent `/update` 的 Secret 校验、WSS 协议及数据库结构保持原样。
+
+覆盖匿名/伪造/过期凭据、管理员 Bearer/Cookie/WS 查询 JWT、隐藏节点、管理员缓存后的公开投影、
+真实指标及历史查询、后台登录与 Turnstile、Agent 独立鉴权和数据库错误响应。
+
 本目录包含用于本地测试聚合功能的完整工具，可以无需部署到 Cloudflare 就验证效果。
 
 ## 快速开始

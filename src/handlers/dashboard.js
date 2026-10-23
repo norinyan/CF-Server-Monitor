@@ -181,7 +181,7 @@ async function getRealtimeStateForServers(env, serverIds) {
 export async function handleServerAPI(request, env, sys) {
   const isLoggedIn = await checkAuth(request, env, sys);
   
-  if (sys.is_public !== 'true' && !isLoggedIn) {
+  if (!isLoggedIn) {
     return simpleAuthResponse();
   }
   markFrontendRealtimeActive();
@@ -210,7 +210,7 @@ export async function handleServerAPI(request, env, sys) {
 export async function handleServersAPI(request, env, sys) {
   const isLoggedIn = await checkAuth(request, env, sys);
   
-  if (sys.is_public !== 'true' && !isLoggedIn) {
+  if (!isLoggedIn) {
     return simpleAuthResponse();
   }
   markFrontendRealtimeActive();

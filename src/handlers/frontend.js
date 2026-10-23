@@ -463,7 +463,7 @@ function resolveThemeUrlForAsset(request, settings) {
 }
 
 function shouldUseBuiltinFrontend(path) {
-  return path === '/admin' || path.startsWith('/admin/');
+  return path === '/' || path === '/admin' || path.startsWith('/admin/');
 }
 
 export async function serveFrontend(request, env, settings = null) {

@@ -37,7 +37,8 @@ test('frontend WebSocket closes at its lifetime limit without reconnecting', asy
   const vite = await createServer({
     appType: 'custom',
     logLevel: 'silent',
-    server: { middlewareMode: true }
+    // This tests a mocked WebSocket via SSR, not TLS. Keep mkcert and trust stores out of unit tests.
+    server: { middlewareMode: true, https: false, hmr: false }
   })
   const { createLiveSocket, normalizeLiveSocketTimeoutMinutes } = await vite.ssrLoadModule('/src/frontend/utils/api.js')
   const originalWindow = globalThis.window

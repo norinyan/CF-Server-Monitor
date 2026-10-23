@@ -298,6 +298,16 @@ async function initApp() {
   const currentHash = window.location.hash || ''
   const isAdmin = isAdminPath() || currentHash.startsWith('#admin') || currentHash.startsWith('#/admin')
 
+  // The public status page needs only the allowlisted status API, never private bootstrap settings.
+  if (!isAdmin && !currentHash.startsWith('#/server/') && !currentHash.startsWith('#/dashboard')) {
+    const app = createApp(App)
+    app.provide('appConfig', { is_public: true })
+    app.use(router)
+    app.mount('#app')
+    document.getElementById('loading')?.remove()
+    return
+  }
+
   // 多站模式公开页面：一次 getAll 获取所有站点配置，检查 Turnstile key 是否可共享。
   let config
   if (isMultipleMode && !isAdmin) {

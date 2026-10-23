@@ -5,6 +5,7 @@ import { handleAdminAPI } from './handlers/admin.js';
 import { serveFrontend } from './handlers/frontend.js';
 import { handleUpdate, handleWebSocketUpgrade, handleUpdateWebSocketUpgrade } from './handlers/update.js';
 import { handleServerAPI, handleServersAPI } from './handlers/dashboard.js';
+import { handlePublicStatus } from './handlers/status.js';
 import { handleTheme } from './handlers/theme.js';
 import { isValidThemeOptions, loadSettings, loadSiteSettings, loadAppearanceOptions, normalizeFrontendWsTimeoutMinutes, normalizeLongHistoryPoints, saveThemeOptions, setDebug, debug } from './utils/settings.js';
 import { omitNullLossProbeFields } from './handlers/dashboard.js';
@@ -114,7 +115,7 @@ async function fetchHistoryData(env, request, id, hours, columns, sys = null) {
   }
   const isLoggedIn = await checkAuth(request, env, sys);
   
-  if (sys.is_public !== 'true' && !isLoggedIn) {
+  if (!isLoggedIn) {
     return simpleAuthResponse();
   }
   
@@ -198,6 +199,21 @@ export default {
     
     if (method === 'OPTIONS') {
       return createOptionsResponse(request, corsAllowedOrigins);
+    }
+
+    // Private reads stay private regardless of the legacy is_public setting.
+    const privateReads = ['/api/servers', '/api/server', '/api/history/all', '/__do/health', '/theme'];
+    if (privateReads.includes(path)) {
+      const settings = await loadSiteSettings(env.DB);
+      if (!await checkAuth(request, env, settings)) {
+        const response = simpleAuthResponse();
+        response.headers.set('Cache-Control', 'no-store');
+        return applyCors(response, request, corsAllowedOrigins);
+      }
+    }
+    if (method === 'GET' && path === '/api/status') {
+      await initDatabase(env.DB);
+      return applyCors(await handlePublicStatus(env), request, corsAllowedOrigins);
     }
 
     if (method === 'GET' && path === '/admin/') {
@@ -294,6 +310,15 @@ export default {
       }},
       { method: 'GET', path: '/api/config', handler: async () => {
         await ensureSiteSettings();
+        if (!await checkAuth(request, env, sys)) {
+          return createSuccessResponse({
+            is_public: true, authorization: false, site_title: 'NORIN / STATUS',
+            preferred_theme: 'auto', default_language: 'zh',
+            turnstile_enabled: false,
+            turnstile_login_enabled: sys.turnstile_enabled === 'true' || sys.turnstile_login_enabled === 'true',
+            turnstile_site_key: sys.turnstile_site_key || ''
+          });
+        }
         const appearanceOptions = await loadAppearanceOptions(env.DB);
         const turnstileEnabled = sys.turnstile_enabled === 'true';
         const turnstileLoginEnabled = sys.turnstile_login_enabled === 'true';
@@ -438,6 +463,9 @@ export default {
         if (response.status === 101) {
           return response;
         }
+
+        response.headers.set('Cache-Control', 'no-store');
+        response.headers.append('Vary', 'Cookie, Authorization');
 
         if (setTurnstileVerified) {
           const expires = Math.floor(Date.now() / 1000) + 3600;

@@ -1,13 +1,6 @@
 name: Deploy to Cloudflare Workers
 
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-      - '.gitignore'
-      - 'LICENSE'
   workflow_dispatch:
 
 jobs:

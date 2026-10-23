@@ -11,8 +11,10 @@
     "build": "node scripts/build.js",
     "build:frontend": "node scripts/build.js",
     "build:github-page": "node scripts/build-github-page.js",
-    "test": "node --test test/admin-usage.test.js test/dashboard-latency-window.test.js test/frontend-admin-entry-url.test.js test/frontend-api-base.test.js test/frontend-live-socket.test.js test/latest-metrics-all.test.js test/latest-timestamps.test.js test/metrics-broadcaster-agent-config.test.js test/notification-language.test.js test/traffic-alert.test.js test/server-detail-cache.test.js test/update-payload-limit.test.js",
-    "test:all": "npm run test && npm run test:agent-config && npm run test:history-query",
+    "test:permissions": "node --test test/public-status-permissions.test.js",
+    "test": "node --test test/public-status-permissions.test.js test/admin-usage.test.js test/dashboard-latency-window.test.js test/frontend-admin-entry-url.test.js test/frontend-api-base.test.js test/frontend-live-socket.test.js test/latest-metrics-all.test.js test/latest-timestamps.test.js test/metrics-broadcaster-agent-config.test.js test/notification-language.test.js test/traffic-alert.test.js test/server-detail-cache.test.js test/update-payload-limit.test.js",
+    "test:all": "npm run test && npm run test:agent-config && npm run test:history-query && npm run test:runtime",
+    "test:runtime": "npm run build:frontend && wrangler deploy --dry-run --outdir .wrangler/test-bundle && node --test test/worker-runtime.test.js",
     "test:agent-config": "node test/agent-config.js",
     "test:history-query": "node --test test/history-query.test.js",
     "preview": "vite preview"

@@ -8,6 +8,11 @@ normalizeAdminEntryUrl()
 const routes = [
   {
     path: '/',
+    name: 'Status',
+    component: () => import('../views/PublicStatus.vue')
+  },
+  {
+    path: '/dashboard',
     name: 'Dashboard',
     component: () => import('../views/Dashboard.vue')
   },
